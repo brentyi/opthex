@@ -31,7 +31,7 @@ class HexRobot(abc.ABC):
         RobotState
             The current state of the robot.
         """
-        pass
+        raise NotImplementedError
 
     @abc.abstractmethod
     def set_command(self, command: Dict[str, float]) -> None:
@@ -42,6 +42,7 @@ class HexRobot(abc.ABC):
         command : Dict[str, float]
             The commands to the robot.
         """
+        raise NotImplementedError
 
 
 class MujocoHexRobot(HexRobot):

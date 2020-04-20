@@ -1,0 +1,8 @@
+# vim
+*.swp
+
+# python
+*__pycache__
+*.pyc
+*.hypothesis
+*.egg-info

@@ -66,7 +66,7 @@ class MujocoHexRobot(HexRobot):
             self.sim.model.get_joint_qpos_addr(x) for x in self.joint_names
         ]
         self.joint_name_id_map = dict(zip(self.joint_names, self.joint_ids))
-        self.joint_actuator_id_map = dict(zip(self.joint_names, list(range(6))))
+        self.joint_actuator_id_map = dict(zip(self.joint_names, range(6)))
 
         if viewer:
             self.viewer = MjViewer(self.sim)

@@ -12,6 +12,6 @@ setup(
     python_requires=">=3.7",
     install_requires=[
         "numpy",
-        "mujoco_py",
+        "mujoco_py>=2.0",
     ]
 )

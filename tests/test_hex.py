@@ -14,7 +14,6 @@ from hypothesis import given
 from opthex.hex import HexState
 
 
-
 @st.composite
 def hex_state_strategy(draw: Any) -> HexState:
     """Generate a random HexState object"""

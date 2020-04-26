@@ -11,10 +11,6 @@ from typing import Any
 from collections import OrderedDict
 
 from opthex.hex import HexState
-import ipdb
-
-ipdb.set_trace()
-import mujoco_py
 
 
 @st.composite

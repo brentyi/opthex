@@ -76,24 +76,18 @@ class BaseMujocoHexRobot(HexRobot):
     def __init__(self, load_path: str, viewer: bool = True):
         """Initialize a hex robot in mujoco."""
         model = load_model_from_path(load_path)
-        self.sim = MjSim(model)
+        self._sim = MjSim(model)
 
         self.num_joints = len(self.joint_names)
-        self._joint_qpos_ids = [
-            self.sim.model.get_joint_qpos_addr(x) for x in self.joint_names
-        ]
-        self._joint_qvel_ids = [
-            self.sim.model.get_joint_qvel_addr(x) for x in self.joint_names
-        ]
 
-        self._joint_actuator_id_map = dict(
-            zip(self.joint_names, range(self.num_joints))
-        )
+        self._joint_qpos_ids = [self._sim.model.get_joint_qpos_addr(x) for x in self.joint_names]
+        self._joint_qvel_ids = [self._sim.model.get_joint_qvel_addr(x) for x in self.joint_names]
+        self._joint_actuator_id_map = dict(zip(self.joint_names, range(self.num_joints)))
 
         if viewer:
-            self.viewer = MjViewer(self.sim)
+            self._viewer = MjViewer(self._sim)
         else:
-            self.viewer = None
+            self._viewer = None
 
     def get_state(self) -> HexState:
         """Retrieve the current state of the robot.
@@ -103,7 +97,7 @@ class BaseMujocoHexRobot(HexRobot):
         HexState
             The current state of the robot.
         """
-        sim_state = self.sim.get_state()
+        sim_state = self._sim.get_state()
         joint_pos = sim_state.qpos[self._joint_qpos_ids]
         joint_vel = sim_state.qvel[self._joint_qvel_ids]
         return HexState(
@@ -120,18 +114,18 @@ class BaseMujocoHexRobot(HexRobot):
         joints : Dict[str, float]
             A mapping between the joint name and its value to be set.
         """
-        sim_state = self.sim.get_state()
+        sim_state = self._sim.get_state()
         for name, value in joints.items():
-            joint_id = self.sim.model.get_joint_qpos_addr(name)
+            joint_id = self._sim.model.get_joint_qpos_addr(name)
             sim_state.qpos[joint_id] = value
-        self.sim.set_state(sim_state)
-        self.sim.forward()
+        self._sim.set_state(sim_state)
+        self._sim.forward()
 
     def step(self) -> None:
         """Steps the simulation forward by one step. Updates the visualizer if one is available."""
-        self.sim.step()
-        if self.viewer is not None:
-            self.viewer.render()
+        self._sim.step()
+        if self._viewer is not None:
+            self._viewer.render()
 
     def set_command(self, command: Dict[str, float]) -> None:
         """Set the command of the robot.
@@ -144,7 +138,7 @@ class BaseMujocoHexRobot(HexRobot):
         ctrl = np.zeros((self.num_joints,))
         for name, value in command.items():
             ctrl[self._joint_actuator_id_map[name]] = value
-        self.sim.data.ctrl[:] = ctrl
+        self._sim.data.ctrl[:] = ctrl
 
 
 class MujocoHexRobot(BaseMujocoHexRobot):

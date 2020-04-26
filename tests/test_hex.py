@@ -1,3 +1,7 @@
+import sys
+from unittest.mock import Mock
+sys.modules['mujoco_py'] = Mock() # mock mujoco
+
 import numpy as np
 import hypothesis.strategies as st
 import hypothesis.extra.numpy as hnp
@@ -6,6 +10,8 @@ from typing import Any
 from collections import OrderedDict
 
 from opthex.hex import HexState
+import ipdb; ipdb.set_trace();
+import mujoco_py
 
 
 @st.composite

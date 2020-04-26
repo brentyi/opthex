@@ -3,9 +3,6 @@ import numpy as np
 
 robot = MujocoHexRobot()
 state = robot.get_state()
-import ipdb
-
-ipdb.set_trace()
 
 joints = state.qpos
 

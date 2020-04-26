@@ -1,17 +1,15 @@
 import sys
-from unittest.mock import Mock
-
-sys.modules["mujoco_py"] = Mock()  # mock mujoco
-
 from collections import OrderedDict
 from typing import Any
+from unittest.mock import Mock
 
 import hypothesis.extra.numpy as hnp
 import hypothesis.strategies as st
 import numpy as np
 from hypothesis import given
 
-from opthex.hex import HexState
+sys.modules["mujoco_py"] = Mock()
+from opthex.hex import HexState  # isort:skip
 
 
 @st.composite

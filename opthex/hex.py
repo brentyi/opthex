@@ -1,7 +1,9 @@
 import numpy as np
 import os
 import abc
-from typing import Dict
+from typing import Dict, Tuple
+from typing import OrderedDict as OrderedDictT
+from collections import OrderedDict
 from dataclasses import dataclass
 
 from mujoco_py import load_model_from_path, MjSim, MjViewer
@@ -9,14 +11,30 @@ from mujoco_py import load_model_from_path, MjSim, MjViewer
 
 @dataclass(frozen=True)
 class HexState:
-    """Encompasses the current state of the robot."""
+    """Encompasses the current state of the robot.
 
-    joints: Dict[str, float]
-    """Current joint state of the robot. A mapping between the joint name to its value."""
+    Joint mappings are kept in the order of the `joint_names` of the robot.
+    """
+
+    qpos: OrderedDictT[str, float]
+    """A mapping between the joint name to its position."""
+
+    qvel: OrderedDictT[str, float]
+    """A mapping between the joint name to its velocity."""
 
     acceleration: np.ndarray
-    """The acceleration vector of the robot, in the robot frame."""
-    # TODO add more
+    """The acceleration vector of the robot, in the robot base frame."""
+    # TODO add more ?
+
+    def joint_state(self) -> np.ndarray:
+        """A numpy representation of the joint state. This does not include non joint values.
+
+        Returns
+        -------
+        np.ndarray, shape=(2, N)
+            A numpy representation of the joint state, in the order of `joint_names`.
+        """
+        return np.array([list(self.qpos.values()), list(self.qvel.values())])
 
 
 class HexRobot(abc.ABC):
@@ -45,28 +63,32 @@ class HexRobot(abc.ABC):
         raise NotImplementedError
 
 
-class MujocoHexRobot(HexRobot):
+class BaseMujocoHexRobot(HexRobot):
 
-    """The hexapod robot in mujoco."""
+    """The hexapod robot in mujoco. Child classes need to define the joint names."""
 
-    def __init__(self, load_path: str = "../models/hex.xml", viewer: bool = True):
+    @classmethod
+    @abc.abstractproperty
+    def joint_names(cls) -> Tuple[str, ...]:
+        """The names of the joints in the mujoco xml."""
+        raise NotImplementedError
+
+    def __init__(self, load_path: str, viewer: bool = True):
         """Initialize a hex robot in mujoco."""
         model = load_model_from_path(load_path)
         self.sim = MjSim(model)
 
-        self.joint_names = [
-            "rear_right_joint",
-            "mid_right_joint",
-            "front_right_joint",
-            "rear_left_joint",
-            "mid_left_joint",
-            "front_left_joint",
-        ]
-        self.joint_ids = [
+        self.num_joints = len(self.joint_names)
+        self._joint_qpos_ids = [
             self.sim.model.get_joint_qpos_addr(x) for x in self.joint_names
         ]
-        self.joint_name_id_map = dict(zip(self.joint_names, self.joint_ids))
-        self.joint_actuator_id_map = dict(zip(self.joint_names, range(6)))
+        self._joint_qvel_ids = [
+            self.sim.model.get_joint_qvel_addr(x) for x in self.joint_names
+        ]
+
+        self._joint_actuator_id_map = dict(
+            zip(self.joint_names, range(self.num_joints))
+        )
 
         if viewer:
             self.viewer = MjViewer(self.sim)
@@ -82,13 +104,16 @@ class MujocoHexRobot(HexRobot):
             The current state of the robot.
         """
         sim_state = self.sim.get_state()
-        joints = sim_state.qpos[self.joint_ids]
+        joint_pos = sim_state.qpos[self._joint_qpos_ids]
+        joint_vel = sim_state.qvel[self._joint_qvel_ids]
         return HexState(
-            joints=dict(zip(self.joint_names, joints)), acceleration=0
+            qpos=OrderedDict(zip(self.joint_names, joint_pos)),
+            qvel=OrderedDict(zip(self.joint_names, joint_vel)),
+            acceleration=np.zeros(3),
         )  # TODO get the acceleration.
 
-    def set_joints(self, joints: Dict[str, float]) -> None:
-        """Sets the joints to the specified values
+    def set_joint_positions(self, joints: Dict[str, float]) -> None:
+        """Sets the joint positions to the specified values
 
         Parameters
         ----------
@@ -97,7 +122,7 @@ class MujocoHexRobot(HexRobot):
         """
         sim_state = self.sim.get_state()
         for name, value in joints.items():
-            joint_id = self.joint_name_id_map[name]
+            joint_id = self.sim.model.get_joint_qpos_addr(name)
             sim_state.qpos[joint_id] = value
         self.sim.set_state(sim_state)
         self.sim.forward()
@@ -116,7 +141,40 @@ class MujocoHexRobot(HexRobot):
         command : Dict[str, float]
             The commands to the robot.
         """
-        ctrl = np.zeros((6,))
+        ctrl = np.zeros((self.num_joints,))
         for name, value in command.items():
-            ctrl[self.joint_actuator_id_map[name]] = value
+            ctrl[self._joint_actuator_id_map[name]] = value
         self.sim.data.ctrl[:] = ctrl
+
+
+class MujocoHexRobot(BaseMujocoHexRobot):
+
+    """A hexapod robot in mujoco."""
+
+    joint_names: Tuple[str, ...] = (
+        "rear_right_joint",
+        "mid_right_joint",
+        "front_right_joint",
+        "rear_left_joint",
+        "mid_left_joint",
+        "front_left_joint",
+    )
+
+    def __init__(self, load_path: str = "../models/hex.xml", viewer: bool = True):
+        """Initialize a hex robot in mujoco."""
+        super(MujocoHexRobot, self).__init__(load_path, viewer)
+
+
+class MujocoHalfHexRobot(BaseMujocoHexRobot):
+
+    """The half hexapod robot in mujoco. The robot only can move in the x, z plane."""
+
+    joint_names: Tuple[str, ...] = (
+        "rear_joint",
+        "mid_joint",
+        "front_joint",
+    )
+
+    def __init__(self, load_path: str = "../models/half_hex.xml", viewer: bool = True):
+        """Initialize a half hex robot in mujoco."""
+        super(MujocoHalfHexRobot, self).__init__(load_path, viewer)

@@ -6,3 +6,4 @@
 *.pyc
 *.hypothesis
 *.egg-info
+*.mypy_cache

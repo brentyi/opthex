@@ -1,24 +1,17 @@
-from opthex.hex import MujocoHexRobot
+from opthex.hex import MujocoHalfHexRobot
 import numpy as np
 
-robot = MujocoHexRobot()
+robot = MujocoHalfHexRobot()
 state = robot.get_state()
-import ipdb
-
-ipdb.set_trace()
-
 joints = state.qpos
 
 group1 = [
-    "front_right_joint",
-    "rear_right_joint",
-    "mid_left_joint",
+    "front_joint",
+    "rear_joint",
 ]
 
 group2 = [
-    "front_left_joint",
-    "rear_left_joint",
-    "mid_right_joint",
+    "mid_joint",
 ]
 for joint in group1:
     joints[joint] = 0

@@ -1,12 +1,12 @@
-import numpy as np
-import os
 import abc
-from typing import Dict, Tuple
-from typing import OrderedDict as OrderedDictT
+import os
 from collections import OrderedDict
 from dataclasses import dataclass
+from typing import Dict, Tuple
+from typing import OrderedDict as OrderedDictT
 
-from mujoco_py import load_model_from_path, MjSim, MjViewer
+import numpy as np
+from mujoco_py import MjSim, MjViewer, load_model_from_path
 
 
 @dataclass(frozen=True)
@@ -27,7 +27,9 @@ class HexState:
     # TODO add more ?
 
     def joint_state(self) -> np.ndarray:
-        """A numpy representation of the joint state. This does not include non joint values.
+        """A numpy representation of the joint state.
+
+        This does not include non joint values.
 
         Returns
         -------
@@ -74,15 +76,29 @@ class BaseMujocoHexRobot(HexRobot):
         raise NotImplementedError
 
     def __init__(self, load_path: str, viewer: bool = True):
-        """Initialize a hex robot in mujoco."""
+        """Initialize a hex robot in mujoco.
+
+        Parameters
+        ---------
+        load_path : str
+            Path to the xml file.
+        viewer : bool
+            Flag to create a MjViewer for the robot. By default a viewer will be created.
+        """
         model = load_model_from_path(load_path)
         self._sim = MjSim(model)
 
         self.num_joints = len(self.joint_names)
 
-        self._joint_qpos_ids = [self._sim.model.get_joint_qpos_addr(x) for x in self.joint_names]
-        self._joint_qvel_ids = [self._sim.model.get_joint_qvel_addr(x) for x in self.joint_names]
-        self._joint_actuator_id_map = dict(zip(self.joint_names, range(self.num_joints)))
+        self._joint_qpos_ids = [
+            self._sim.model.get_joint_qpos_addr(x) for x in self.joint_names
+        ]
+        self._joint_qvel_ids = [
+            self._sim.model.get_joint_qvel_addr(x) for x in self.joint_names
+        ]
+        self._joint_actuator_id_map = dict(
+            zip(self.joint_names, range(self.num_joints))
+        )
 
         if viewer:
             self._viewer = MjViewer(self._sim)
@@ -122,7 +138,10 @@ class BaseMujocoHexRobot(HexRobot):
         self._sim.forward()
 
     def step(self) -> None:
-        """Steps the simulation forward by one step. Updates the visualizer if one is available."""
+        """Steps the simulation forward by one step.
+
+        Updates the visualizer if one is available.
+        """
         self._sim.step()
         if self._viewer is not None:
             self._viewer.render()
@@ -135,10 +154,8 @@ class BaseMujocoHexRobot(HexRobot):
         command : Dict[str, float]
             The commands to the robot.
         """
-        ctrl = np.zeros((self.num_joints,))
         for name, value in command.items():
-            ctrl[self._joint_actuator_id_map[name]] = value
-        self._sim.data.ctrl[:] = ctrl
+            self._sim.data.ctrl[self._joint_actuator_id_map[name]] = value
 
 
 class MujocoHexRobot(BaseMujocoHexRobot):

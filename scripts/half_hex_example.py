@@ -1,5 +1,6 @@
-from opthex.hex import MujocoHalfHexRobot
 import numpy as np
+
+from opthex.hex import MujocoHalfHexRobot
 
 robot = MujocoHalfHexRobot()
 state = robot.get_state()

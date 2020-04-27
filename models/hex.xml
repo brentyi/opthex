@@ -1,0 +1,83 @@
+<mujoco model="hex">
+    <compiler angle="radian" meshdir="hex_meshes/"/>
+    <size njmax="500" nconmax="100" />
+
+    <default class="main">
+        <default class="leg">
+            <geom type="mesh" rgba="0.3 0.8 0.9 1" mesh="leg_convex" />
+            <joint pos="0 0 0" axis="0 1 0" armature="0.01" damping="0.2" frictionloss="0.00"/>
+        </default>
+
+        <default class="leg_actuator">
+          <position gear="1.0" kp="15" forcelimited="true" forcerange="-10 10"/>
+        </default>
+    </default>
+
+    <asset>
+        <mesh name="base_link" file="base_link.STL" />
+        <mesh name="leg_convex" file="leg_convex.STL" />
+
+        <texture name="skybox" type="skybox" builtin="gradient" rgb1=".4 .6 .8" rgb2="0 0 0" width="1024" height="1024" mark="random" markrgb="1 1 1"/>
+        <texture name="texplane" type="2d" builtin="checker" rgb1="0.5961 0.5647 0.4784" rgb2="0.3843 0.32941 0.19215" width="512" height="512" mark="cross" markrgb=".8 .8 .8"/>
+        <material name="matplane" reflectance="0.3" texture="texplane" texrepeat="1 1" texuniform="true"/>
+    </asset>
+
+    <worldbody>
+        <light directional="true" diffuse=".8 .8 .8" specular="0.1 0.1 0.1" pos="0 0 2.5" dir="0 0 -1" castshadow="false"/>
+        <geom name="ground" type="plane" size="6 6 1" pos="0 0 0" quat="1 0 0 0" material="matplane" condim="1"/>
+
+        <body name="base_link" pos="0 0 0.15">
+          <joint armature="0" damping="0" limited="false" name="root" pos="0 0 0" type="free"/>
+
+          <geom type="mesh" rgba="0.5 0.0 0.5 1" mesh="base_link" />
+          <inertial pos="0.0 0.0 0" mass="2.0477746" diaginertia="0.5 0.5 0.5" />
+
+          <site name="head" pos="0.15 0 0" rgba="1 0 0 0.5" size="0.01 0.01 0.01" />
+
+          <!-- right side -->
+          <body childclass="leg" name="rear_right_link" pos="-0.11175 -0.106162 -0.02995">
+              <joint name="rear_right_joint"/>
+              <geom />
+              <inertial pos="-0.0146232 -0.0398438 0" mass="0.0477746" diaginertia="0.001 0.001 0.001" />
+          </body>
+          <body childclass="leg" name="mid_right_link" pos="0 -0.117162 -0.02995">
+              <inertial pos="-0.0146232 -0.0398438 0" mass="0.0477746" diaginertia="0.001 0.001 0.001" />
+              <joint name="mid_right_joint"/>
+              <geom />
+          </body>
+          <body childclass="leg" name="front_right_link" pos="0.11175 -0.106162 -0.02995">
+              <inertial pos="-0.0146232 -0.0398438 0" mass="0.0477746" diaginertia="0.001 0.001 0.001" />
+              <joint name="front_right_joint"/>
+              <geom />
+          </body>
+
+          <!-- left side -->
+          <body childclass="leg" name="rear_left_link" pos="-0.11175 0.106162 -0.02995">
+              <inertial pos="-0.0146232 -0.0398438 0" mass="0.0477746" diaginertia="0.001 0.001 0.001" />
+              <joint name="rear_left_joint"/>
+              <geom />
+          </body>
+          <body childclass="leg" name="mid_left_link" pos="0 0.117162 -0.02995">
+              <inertial pos="-0.0146232 -0.0398438 0" mass="0.0477746" diaginertia="0.001 0.001 0.001" />
+              <joint name="mid_left_joint"/>
+              <geom />
+          </body>
+          <body childclass="leg" name="front_left_link" pos="0.11175 0.106162 -0.02995">
+              <inertial pos="-0.0146232 -0.0398438 0" mass="0.0477746" diaginertia="0.001 0.001 0.001" />
+              <joint name="front_left_joint"/>
+              <geom />
+          </body>
+        </body>
+
+    </worldbody>
+
+    <actuator >
+        <position joint="rear_right_joint" class="leg_actuator"/>
+        <position joint="mid_right_joint" class="leg_actuator"/>
+        <position joint="front_right_joint" class="leg_actuator"/>
+
+        <position joint="rear_left_joint" class="leg_actuator"/>
+        <position joint="mid_left_joint" class="leg_actuator"/>
+        <position joint="front_left_joint" class="leg_actuator"/>
+  </actuator>
+</mujoco>

@@ -1,4 +1,4 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
 setup(
     name="opthex",
@@ -10,8 +10,5 @@ setup(
     url="https://github.com/brentyi/opthex",
     packages=find_packages(exclude=["tests"]),
     python_requires=">=3.7",
-    install_requires=[
-        "numpy",
-        "mujoco_py>=2.0,<2.0.2.9",
-    ]
+    install_requires=["numpy", "mujoco_py>=2.0,<2.0.2.9",],
 )
